@@ -10,24 +10,6 @@ export class CdkStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
-    const lambdaRole = new Role(this, 'LambdaExecutionRole', {
-      assumedBy: new ServicePrincipal('lambda.amazonaws.com'),
-    });
-
-    
-
-    lambdaRole.addToPolicy(new iam.PolicyStatement({
-      effect : iam.Effect.ALLOW,
-      actions: [ 'logs:CreateLogStream', 'logs:PutLogEvents', 'logs:CreateLogGroup'],
-      resources: ['*'] 
-    }));
-
-    const apiGatewayRole = new Role(this, 'ApiGatewayExecutionRole', {
-      assumedBy: new ServicePrincipal('apigateway.amazonaws.com'),
-    });
-    
-
-    
     //api
     
     const api = new ApiGateway(this);

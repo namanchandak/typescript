@@ -9,13 +9,6 @@ export class ApiGateway extends RestApi{
     {
         super(scope, "ApiGateway",{
             restApiName:'cdk',
-            deployOptions: {
-                accessLogDestination: new LogGroupLogDestination(new LogGroup(scope, "ApiLogGroup", {
-                    logGroupName: "api_gateway",
-                    retention: RetentionDays.ONE_DAY,
-                    removalPolicy: RemovalPolicy.DESTROY
-                }))
-            }
         })
     }
     addIntegration(method : string , path : string, lambda: IFunction)
