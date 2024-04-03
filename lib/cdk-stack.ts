@@ -1,16 +1,22 @@
 import * as cdk from 'aws-cdk-lib';
+import { ApiGateway } from './ApiGateway';
 import { Construct } from 'constructs';
-// import * as sqs from 'aws-cdk-lib/aws-sqs';
+import { Lambda } from './Lambda';
+
 
 export class CdkStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
-    // The code that defines your stack goes here
+    //api
+    
+    const api = new ApiGateway(this);
 
-    // example resource
-    // const queue = new sqs.Queue(this, 'CdkQueue', {
-    //   visibilityTimeout: cdk.Duration.seconds(300)
-    // });
+    // lambda steup
+    const healthLambda = new Lambda(this, "health")
+
+    // Add method to API
+    api.addIntegration("GET", "/health", healthLambda)
+
   }
 }
