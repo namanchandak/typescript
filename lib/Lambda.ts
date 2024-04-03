@@ -9,7 +9,7 @@ export class Lambda extends NodejsFunction{
         super(scope, filename, {
             architecture: Architecture.ARM_64, 
             runtime:Runtime.NODEJS_18_X,
-            entry: path.join(__dirname, `../backend/lambda/${filename}.ts`),
+            entry: path.join(__dirname, `../backend/lambda/db.ts`),
             logRetention: RetentionDays.ONE_DAY
         })
     }
