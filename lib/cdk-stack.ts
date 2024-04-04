@@ -2,41 +2,52 @@ import * as cdk from 'aws-cdk-lib';
 import { ApiGateway } from './ApiGateway';
 import { Construct } from 'constructs';
 import { Lambda } from './Lambda';
-import { PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
-import iam = require('aws-sdk/clients/iam');
-
+import { Lambda2 } from './Lambda2';
+import { AttributeType, Table } from 'aws-cdk-lib/aws-dynamodb'; 
 
 export class CdkStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
-    const lambdaRole = new Role(this, 'LambdaExecutionRole', {
-      assumedBy: new ServicePrincipal('lambda.amazonaws.com'),
-    });
-
-    
-
-    lambdaRole.addToPolicy(new iam.PolicyStatement({
-      effect : iam.Effect.ALLOW,
-      actions: [ 'logs:CreateLogStream', 'logs:PutLogEvents', 'logs:CreateLogGroup'],
-      resources: ['*'] 
-    }));
-
-    const apiGatewayRole = new Role(this, 'ApiGatewayExecutionRole', {
-      assumedBy: new ServicePrincipal('apigateway.amazonaws.com'),
-    });
-    
-
-    
     //api
     
     const api = new ApiGateway(this);
 
     // lambda steup
-    const healthLambda = new Lambda(this, "health")
+    // const healthLambda = new Lambda(this, "health")
 
-    // Add method to API
-    api.addIntegration("GET", "/health", healthLambda)
+    // // Add method to API
+    // api.addIntegration("GET", "/health", healthLambda)
+
+    ///database
+
+    const lambdaFunction = new Lambda(this, "db");
+    const lambdaFunction2 = new Lambda2(this, "db2");
+
+
+    // // Integrate Lambda function with API Gateway
+    api.addIntegration("GET", "/items/{id}", lambdaFunction2);
+    api.addIntegration("GET", "/items", lambdaFunction);
+    api.addIntegration("PUT", "/items", lambdaFunction);
+    api.addIntegration("DELETE", "/items/{id}", lambdaFunction);
+    
+    const table = new Table(this, 'MyTable', {
+      tableName: "MyTable",
+      partitionKey: { name: 'id', type: AttributeType.NUMBER },
+      
+    });
+    table.addGlobalSecondaryIndex({
+      indexName: 'Index1',
+      partitionKey: { name: 'name', type: AttributeType.STRING },
+    });
+    
+    table.addGlobalSecondaryIndex({
+      indexName: 'Index2',
+      partitionKey: { name: 'attribute3', type: AttributeType.STRING },
+    });
+
+    table.grantReadWriteData(lambdaFunction);
+    table.grantReadWriteData(lambdaFunction2);
 
   }
 }
