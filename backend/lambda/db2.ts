@@ -1,60 +1,58 @@
-import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import { DynamoDBDocumentClient, GetCommand } from "@aws-sdk/lib-dynamodb";
+import { DynamoDBClient, ScanCommand } from "@aws-sdk/client-dynamodb";
+import { DynamoDBDocumentClient } from "@aws-sdk/lib-dynamodb";
 
 const client = new DynamoDBClient({});
 const dynamo = DynamoDBDocumentClient.from(client);
-
-const tableName = "MyTable"; // Replace with your actual table name
+const tableName = "MyTable";
 
 export const handler = async (event: {
   routeKey: any;
-  pathParameters: { id: number }; // Ensure id is a number
-  body: any;
+  pathParameters: { id: string | undefined };
+  body: string;
 }) => {
-  const statusCode = 200;
+  let statusCode = 200;
   const headers = {
     "Content-Type": "application/json",
   };
 
-  // Check for missing ID
-  if (!event.pathParameters?.id) {
-    return {
-      statusCode: 400,
-      body: JSON.stringify('Missing required parameter: "id"'),
-      headers,
-    };
-  }
+  let body2: any[] = []; 
 
   try {
-    const id = event.pathParameters.id; // No conversion needed for numbers
 
-    const result = await dynamo.send(
-      new GetCommand({
-        TableName: tableName,
-        Key: {
-          id, // Use id directly as the partition key value
-        },
-      })
-    );
+    const scanOutput = await dynamo.send(new ScanCommand({ TableName: tableName }));
+    body2 = scanOutput.Items || []; 
 
-    if (!result.Item) {
+    const givenId = event.pathParameters?.id ? parseInt(event.pathParameters.id) : undefined;
+
+    if (givenId === undefined || isNaN(givenId)) {
+      statusCode = 400;
       return {
-        statusCode: 404,
-        body: JSON.stringify('Item not found for the provided ID'),
+        statusCode,
+        body: JSON.stringify({ message: "Invalid id parameter" }),
         headers,
       };
+    }
+    const matchedItem = body2.find(item => parseInt(item.id.N) === givenId);
+
+    let responseBody;
+
+    if (matchedItem) {
+      responseBody = matchedItem;
+    } else {
+      statusCode = 404;
+      responseBody = { message: "Item not found" };
     }
 
     return {
       statusCode,
-      body: JSON.stringify(result.Item),
+      body: JSON.stringify(responseBody),
       headers,
     };
   } catch (err) {
-    console.error(err);
+    statusCode = 500;
     return {
-      statusCode: 500,
-      body: JSON.stringify(err),
+      statusCode,
+      body: JSON.stringify({ message: "Internal Server Error" }),
       headers,
     };
   }

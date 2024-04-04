@@ -34,8 +34,18 @@ export class CdkStack extends cdk.Stack {
     const table = new Table(this, 'MyTable', {
       tableName: "MyTable",
       partitionKey: { name: 'id', type: AttributeType.NUMBER },
-      sortKey: { name: 'name', type: AttributeType.STRING }
+      
     });
+    table.addGlobalSecondaryIndex({
+      indexName: 'Index1',
+      partitionKey: { name: 'name', type: AttributeType.STRING },
+    });
+    
+    table.addGlobalSecondaryIndex({
+      indexName: 'Index2',
+      partitionKey: { name: 'attribute3', type: AttributeType.STRING },
+    });
+
     table.grantReadWriteData(lambdaFunction);
     table.grantReadWriteData(lambdaFunction2);
 
