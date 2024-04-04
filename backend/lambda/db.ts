@@ -29,7 +29,7 @@ export const handler = async (event: {
     statusCode = 400;
     console.log(err);
 
-    body = JSON.stringify({ error: err });
+    body = JSON.stringify("hiiiiii");
   } finally {
 
     body = JSON.stringify(body);

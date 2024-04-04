@@ -2,11 +2,8 @@ import * as cdk from 'aws-cdk-lib';
 import { ApiGateway } from './ApiGateway';
 import { Construct } from 'constructs';
 import { Lambda } from './Lambda';
-import { handler } from "./db";
-import iam = require('aws-sdk/clients/iam');
+import { Lambda2 } from './Lambda2';
 import { AttributeType, Table } from 'aws-cdk-lib/aws-dynamodb'; 
-
-
 
 export class CdkStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -25,10 +22,11 @@ export class CdkStack extends cdk.Stack {
     ///database
 
     const lambdaFunction = new Lambda(this, "db");
+    const lambdaFunction2 = new Lambda2(this, "db2");
 
 
     // // Integrate Lambda function with API Gateway
-    api.addIntegration("GET", "/items/{id}", lambdaFunction);
+    api.addIntegration("GET", "/items/{id}", lambdaFunction2);
     api.addIntegration("GET", "/items", lambdaFunction);
     api.addIntegration("PUT", "/items", lambdaFunction);
     api.addIntegration("DELETE", "/items/{id}", lambdaFunction);
@@ -39,6 +37,7 @@ export class CdkStack extends cdk.Stack {
       sortKey: { name: 'name', type: AttributeType.STRING }
     });
     table.grantReadWriteData(lambdaFunction);
+    table.grantReadWriteData(lambdaFunction2);
 
   }
 }
