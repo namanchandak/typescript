@@ -1,9 +1,10 @@
 import * as cdk from 'aws-cdk-lib';
 import { ApiGateway } from './ApiGateway';
 import { Construct } from 'constructs';
-import { Lambda } from './Lambda';
-import { Lambda2 } from './Lambda2';
-import { Lambda3 } from './Lambda3';
+import { getAllUsers } from './getAllUserslambda';
+import { getByIdLambda } from './getByIdLambda';
+import { deleteLambda } from './deleteLambda';
+import { crud } from './crud';
 import { AttributeType, Table } from 'aws-cdk-lib/aws-dynamodb'; 
 
 export class CdkStack extends cdk.Stack {
@@ -14,24 +15,18 @@ export class CdkStack extends cdk.Stack {
     
     const api = new ApiGateway(this);
 
-    // lambda steup
-    // const healthLambda = new Lambda(this, "health")
-
-    // // Add method to API
-    // api.addIntegration("GET", "/health", healthLambda)
-
-    ///database
-
-    const lambdaFunction = new Lambda(this, "db");
-    const lambdaFunction2 = new Lambda2(this, "db2");
-    const lambdaFunction3 = new Lambda3(this, "db3");
+    const getAllUserslambda = new getAllUsers(this, "getAllUsers");
+    const getByIdlambda = new getByIdLambda(this, "getById");
+    const deletelambda = new deleteLambda(this, "delete");
+    const Crud= new crud(this, "crud");
 
 
     // // Integrate Lambda function with API Gateway
-    api.addIntegration("GET", "/items/{id}", lambdaFunction2);
-    api.addIntegration("GET", "/items", lambdaFunction);
-    api.addIntegration("PUT", "/items", lambdaFunction);
-    api.addIntegration("DELETE", "/items/{id}", lambdaFunction3);
+    api.addIntegration("GET", "/items/{id}", getByIdlambda);
+    api.addIntegration("GET", "/items", getAllUserslambda);
+    api.addIntegration("PUT", "/items/{id}", Crud);
+    api.addIntegration("POST", "/items", Crud);
+    api.addIntegration("DELETE", "/items/{id}", deletelambda);
     
     const table = new Table(this, 'MyTable', {
       tableName: "MyTable",
@@ -48,9 +43,10 @@ export class CdkStack extends cdk.Stack {
       partitionKey: { name: 'attribute3', type: AttributeType.STRING },
     });
 
-    table.grantReadWriteData(lambdaFunction);
-    table.grantReadWriteData(lambdaFunction2);
-    table.grantReadWriteData(lambdaFunction3);
+    table.grantReadWriteData(getAllUserslambda);
+    table.grantReadWriteData(getByIdlambda);
+    table.grantReadWriteData(deletelambda);
+    table.grantReadWriteData(Crud);
 
   }
 }
